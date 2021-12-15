@@ -1,0 +1,49 @@
+#!/bin/bash
+
+main() {
+    local -i totalRibbonLength=0
+
+    # Read each line
+    while read line; do
+        # Get dimensions
+        local -i width=$(echo $line | cut -d'x' -f1)
+        local -i length=$(echo $line | cut -d'x' -f2)
+        local -i height=$(echo $line | cut -d'x' -f3)
+
+        # Get volume
+        local -i volume=$((width * height * length))
+
+        local -i ribbonLength=0
+
+        # Calculate max dimension
+        local -i maxDimension=$width
+
+        if test $length -gt $maxDimension; then
+            maxDimension=$length
+        fi
+
+        if test $height -gt $maxDimension; then
+            maxDimension=$height
+        fi
+
+        # Add on all dimensions
+        ((ribbonLength += 2 * width))
+        ((ribbonLength += 2 * length))
+        ((ribbonLength += 2 * height))
+
+        # Take off max dimension
+        ((ribbonLength -= 2 * maxDimension))
+
+        # Add on size of bow (volume)
+        ((ribbonLength += volume))
+
+        echo "Length required for $line = $ribbonLength"
+
+        # Add ribbonLength to total ribbonLength
+        ((totalRibbonLength += ribbonLength))
+    done < input
+
+    echo "Total ribbon lrngth required is $totalRibbonLength"
+}
+
+main "$@"
