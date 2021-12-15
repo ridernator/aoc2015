@@ -14,7 +14,7 @@ main() {
                 ((--floor))
             fi
 
-            # Tes if we have reached floor -1
+            # Test if we have reached floor -1
             if test $floor -eq -1; then
                 echo "Got to the basement at character $((index + 1))"
                 exit
