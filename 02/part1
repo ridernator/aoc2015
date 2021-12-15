@@ -1,0 +1,46 @@
+#!/bin/bash
+
+main() {
+    local -i totalArea=0
+
+    # Read each line
+    while read line; do
+        # Get dimensions
+        local -i width=$(echo $line | cut -d'x' -f1)
+        local -i length=$(echo $line | cut -d'x' -f2)
+        local -i height=$(echo $line | cut -d'x' -f3)
+
+        # Get areas of sides
+        local -i wlArea=$((width * length))
+        local -i whArea=$((width * height))
+        local -i lhArea=$((length * height))
+        local -i minArea=$wlArea;
+        local -i area=0
+
+        # Add on areas of sides
+        ((area += 2 * wlArea))
+        ((area += 2 * whArea))
+        ((area += 2 * lhArea))
+
+        # Calculate smallest side
+        if test $whArea -lt $minArea; then
+            minArea=$whArea
+        fi
+
+        if test $lhArea -lt $minArea; then
+            minArea=$lhArea
+        fi
+
+        # Add on smallest side to area
+        ((area += minArea))
+
+        echo "Area required for $line = $area"
+
+        # Add area to total area
+        ((totalArea += area))
+    done < input
+
+    echo "Total area required is $totalArea"
+}
+
+main "$@"
