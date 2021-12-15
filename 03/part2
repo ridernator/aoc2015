@@ -1,0 +1,66 @@
+#!/bin/bash
+
+main() {
+    # Read each line
+    while read directions; do
+        local -A housePositions=( ["0,0"]=1 )
+        local -i sX=0
+        local -i sY=0
+        local -i rX=0
+        local -i rY=0
+
+        # Read each instruction for santa
+        for ((index=0; index<${#directions}; index+=2)); do
+            # Decide which way to go
+            case ${directions:$index:1} in
+                '>')
+                    ((++sX))
+                ;;
+
+                '<')
+                    ((--sX))
+                ;;
+
+                '^')
+                    ((++sY))
+                ;;
+
+                'v')
+                    ((--sY))
+                ;;
+            esac
+
+            # Add house to associative array
+            housePositions["${sX},${sY}"]=1
+        done
+
+        # Read each instruction for robot
+        for ((index=1; index<${#directions}; index+=2)); do
+            # Decide which way to go
+            case ${directions:$index:1} in
+                '>')
+                    ((++rX))
+                ;;
+
+                '<')
+                    ((--rX))
+                ;;
+
+                '^')
+                    ((++rY))
+                ;;
+
+                'v')
+                    ((--rY))
+                ;;
+            esac
+
+            # Add house to associative array
+            housePositions["${rX},${rY}"]=1
+        done
+
+        echo "Total houses visited = ${#housePositions[@]}"
+    done < input
+}
+
+main "$@"

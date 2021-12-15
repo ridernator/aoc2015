@@ -1,0 +1,39 @@
+#!/bin/bash
+
+main() {
+    # Read each line
+    while read directions; do
+        local -A housePositions=( ["0,0"]=1 )
+        local -i x=0
+        local -i y=0
+
+        # Read each instruction
+        for ((index=0; index<${#directions}; ++index)); do
+            # Decide which way to go
+            case ${directions:$index:1} in
+                '>')
+                    ((++x))
+                ;;
+
+                '<')
+                    ((--x))
+                ;;
+
+                '^')
+                    ((++y))
+                ;;
+
+                'v')
+                    ((--y))
+                ;;
+            esac
+
+            # Add house to associative array
+            housePositions["${x},${y}"]=1
+        done
+
+        echo "Total houses visited = ${#housePositions[@]}"
+    done < input
+}
+
+main "$@"
