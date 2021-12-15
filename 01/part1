@@ -1,0 +1,22 @@
+#!/bin/bash
+
+main() {
+    local -i floor=0
+
+    # Read each line
+    while read line; do
+        # For each character in line
+        for ((index=0; index<${#line}; ++index)); do
+            # If it is "(" then increment flor else decrement floor
+            if test ${line:$index:1} = "("; then
+                ((++floor))
+            else
+                ((--floor))
+            fi
+        done
+    done < input
+
+    echo "Ending floor is $floor"
+}
+
+main "$@"

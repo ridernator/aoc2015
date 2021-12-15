@@ -1,0 +1,25 @@
+#!/bin/bash
+
+main() {
+    local -i floor=0
+
+    # Read each line
+    while read line; do
+        # For each character in line
+        for ((index=0; index<${#line}; ++index)); do
+            # If it is "(" then increment flor else decrement floor
+            if test ${line:$index:1} = "("; then
+                ((++floor))
+            else
+                ((--floor))
+            fi
+
+            if test $floor -eq -1; then
+                echo "Got to the basement at character $((index + 1))"
+                exit
+            fi
+        done
+    done < input
+}
+
+main "$@"
