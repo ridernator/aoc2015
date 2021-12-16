@@ -1,0 +1,71 @@
+#!/bin/bash
+
+declare -ri DIMENSION=1000
+
+main() {
+    # Initialise grid
+    echo "Initialising grid"
+    local -a grid;
+    for ((index=0; index<DIMENSION * DIMENSION; ++index)); do
+        grid[$index]=0
+    done
+
+    # Read each instruction
+    while read instruction; do
+        echo "Executing \"$instruction\""
+
+        local -i x0=$(echo $instruction | cut -d',' -f1 | awk -F' ' '{print $NF}')
+        local -i y0=$(echo $instruction | cut -d',' -f2 | cut -d' ' -f1)
+        local -i x1=$(echo $instruction | cut -d',' -f2 | awk -F' ' '{print $NF}')
+        local -i y1=$(echo $instruction | cut -d',' -f3)
+
+        # Default command is toggle
+        local command="toggle"
+
+        # Default value to set is 0
+        local -i valueToSet=0
+
+        # If we are turning lights on the set command to set and value to 1
+        if [[ $instruction =~ .*on.* ]]; then
+            command="set"
+            valueToSet=1
+        elif [[ $instruction =~ .*off.* ]]; then 
+        # If we are turning lights on the set command to set and leave value at 0
+            command="set"
+        fi
+
+        # For set commands, set all lights in range
+        # For toggle commands, toggle all lights in range
+        if test $command = "set"; then
+            for ((indexA=x0; indexA<=x1; ++indexA)); do
+                for ((indexB=y0; indexB<=y1; ++indexB)); do
+                    grid[$((indexA * DIMENSION + indexB))]=$valueToSet
+                done
+            done
+        else            
+            for ((indexA=x0; indexA<=x1; ++indexA)); do
+                for ((indexB=y0; indexB<=y1; ++indexB)); do
+                    if test ${grid[$((indexA * DIMENSION + indexB))]} -eq 0; then
+                        grid[$((indexA * DIMENSION + indexB))]=1
+                    else
+                        grid[$((indexA * DIMENSION + indexB))]=0
+                    fi
+                done
+            done
+        fi
+    done < input
+
+    local -i lightCount=0
+
+    # Count lights which are on
+    echo "Counting lights which are on"
+    for ((index=0; index<DIMENSION * DIMENSION; ++index)); do
+        if test ${grid[$index]} -eq 1; then
+            ((++lightCount))
+        fi
+    done
+
+    echo "$lightCount lights are on"
+}
+
+main "$@"
