@@ -1,0 +1,66 @@
+#!/bin/bash
+
+main() {
+    local -i niceCount=0
+
+    # Read each line
+    while read word; do
+        # Count vowels
+        local -i vowelCount=0
+        for vowel in a e i o u; do
+            for ((index=0; index<${#word}; ++index)); do
+                if test ${word:$index:1} = $vowel; then
+                    ((++vowelCount))
+                fi
+            done
+        done
+
+        # If not enough vowels, the word is not nice
+        if test $vowelCount -lt 3; then
+            echo "$word is naughty : Only $vowelCount vowel(s)"
+            continue
+        fi
+
+        # Test for bad sequences
+        if [[ $word =~ .*ab.* ]]; then
+            echo "$word is naughty : Contains \"ab\""
+            continue
+        fi
+
+        if [[ $word =~ .*cd.* ]]; then
+            echo "$word is naughty : Contains \"cd\""
+            continue
+        fi
+
+        if [[ $word =~ .*pq.* ]]; then
+            echo "$word is naughty : Contains \"pq\""
+            continue
+        fi
+
+        if [[ $word =~ .*xy.* ]]; then
+            echo "$word is naughty : Contains \"xy\""
+            continue
+        fi
+
+        # Test for repeated letters
+        local -i foundRepeat=0
+        for ((index=1; index<${#word}; ++index)); do
+            if test ${word:$index:1} = ${word:$((index - 1)):1}; then
+                foundRepeat=1
+                break
+            fi
+        done
+
+        if test $foundRepeat -eq 0; then
+            echo "$word is naughty : No repeated letters"
+            continue
+        fi
+
+        echo "$word is nice"
+        ((++niceCount))
+    done < input
+
+    echo "$niceCount words are nice"
+}
+
+main "$@"
