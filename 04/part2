@@ -1,0 +1,44 @@
+#!/bin/bash
+
+declare -r KEY="ckczppom"
+declare -ri NUM_THREADS=50
+
+tryRange() {
+    for ((index=$1; index<$2; ++index)); do
+        if [[ $(echo -n ${KEY}${index} | md5sum) =~ ^000000.* ]]; then
+            echo "Answer is $index (${KEY}${index} => $(echo -n ${KEY}${index} | md5sum))"
+            touch found
+            exit
+        fi
+    done
+
+    echo "Answer is not in range $1->$((2 - 1))"
+}
+
+main() {
+    local -i masterIndex=117947
+
+    rm -f found
+
+    while true; do
+        unset pids
+
+        for ((index=$masterIndex; index<masterIndex+NUM_THREADS*100; index+=100)); do
+            (
+                tryRange $index $((index + 100))
+            ) &
+
+            pids="$pids $!"
+        done
+
+        ((masterIndex += NUM_THREADS * 100))
+
+        wait $pids
+
+        if test -e found; then
+            exit
+        fi
+    done
+}
+
+main "$@"
