@@ -1,0 +1,50 @@
+#!/bin/bash
+
+main() {
+    local -i niceCount=0
+
+    # Read each line
+    while read word; do
+        # It contains a pair of any two letters that appears at least twice in
+        # the string without overlapping, like xyxy (xy) or aabcdefgaa (aa),
+        # but not like aaa (aa, but it overlaps)
+        local -i foundRepeat=0
+        for ((indexA=0; indexA<$((${#word} - 3)); ++indexA)); do
+            for ((indexB=$((indexA + 2)); indexB<$((${#word} - 1)); ++indexB)); do
+                if test ${word:$indexA:2} = ${word:$indexB:2}; then
+                    foundRepeat=1
+                    echo "$word nice 1 : ${word:$indexA:2}"
+                    break 2
+                fi
+            done
+        done
+
+        if test $foundRepeat -eq 0; then
+            echo "$word is naughty : No doubled pairs of letters"
+            continue
+        fi
+
+        # It contains at least one letter which repeats with exactly one letter between them,
+        # like xyx, abcdefeghi (efe), or even aaa
+        local -i foundRepeat=0
+        for ((index=2; index<${#word}; ++index)); do
+            if test ${word:$index:1} = ${word:$((index - 2)):1}; then
+                foundRepeat=1
+                echo "$word nice 2 : ${word:$((index - 2)):3}"
+                break
+            fi
+        done
+
+        if test $foundRepeat -eq 0; then
+            echo "$word is naughty : No repeated letters with single gap"
+            continue
+        fi
+
+        echo "$word is nice"
+        ((++niceCount))
+    done < input
+
+    echo "$niceCount words are nice"
+}
+
+main "$@"
