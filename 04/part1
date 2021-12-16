@@ -3,6 +3,7 @@
 declare -r KEY="ckczppom"
 declare -ri NUM_THREADS=50
 
+# Try a range of numbers
 tryRange() {
     for ((index=$1; index<$2; ++index)); do
         if [[ $(echo -n ${KEY}${index} | md5sum) =~ ^00000.* ]]; then
@@ -23,6 +24,7 @@ main() {
     while true; do
         unset pids
 
+        # Try a range of numbers in its own thread
         for ((index=$masterIndex; index<masterIndex+NUM_THREADS*100; index+=100)); do
             (
                 tryRange $index $((index + 100))
