@@ -1,0 +1,58 @@
+#!/bin/bash
+
+declare -ri DIMENSION=1000
+
+main() {
+    # Initialise grid
+    echo "Initialising grid"
+    local -a grid;
+    for ((index=0; index<DIMENSION * DIMENSION; ++index)); do
+        grid[$index]=0
+    done
+
+    # Read each instruction
+    while read instruction; do
+        echo "Executing \"$instruction\""
+
+        local -i x0=$(echo $instruction | cut -d',' -f1 | awk -F' ' '{print $NF}')
+        local -i y0=$(echo $instruction | cut -d',' -f2 | cut -d' ' -f1)
+        local -i x1=$(echo $instruction | cut -d',' -f2 | awk -F' ' '{print $NF}')
+        local -i y1=$(echo $instruction | cut -d',' -f3)
+
+        # Amount to increase/decrease brightness by (Default to -1)
+        local -i increment=-1
+
+        # On means increment brightness by 1
+        if [[ $instruction =~ .*on.* ]]; then
+            increment=1
+        elif [[ $instruction =~ .*toggle.* ]]; then 
+        # Toggle means increment brightness by 2
+            increment=2
+        fi
+        # Off  means increment brightness by -1
+
+        # Increment brightness by the amount specified
+        for ((indexA=x0; indexA<=x1; ++indexA)); do
+            for ((indexB=y0; indexB<=y1; ++indexB)); do
+                ((grid[$((indexA * DIMENSION + indexB))] += increment))
+
+                # Make sure we do not go below 0 brightness
+                if test ${grid[$((indexA * DIMENSION + indexB))]} -lt 0; then
+                    grid[$((indexA * DIMENSION + indexB))]=0
+                fi
+            done
+        done
+    done < input
+
+    local -i brightness=0
+
+    # Calculate brightness
+    echo "Calculating brightness"
+    for ((index=0; index<DIMENSION * DIMENSION; ++index)); do
+        ((brightness += ${grid[$index]}))
+    done
+
+    echo "Total brightness is $brightness"
+}
+
+main "$@"
