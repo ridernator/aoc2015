@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# Increment letter, but skip i, l and o. Return # on out of range
+incLetter() {
+    echo $1 | tr "abcdefghjkmnpqrstuvwxyz" "bcdefghjkmnpqrstuvwxyz#"
+}
+
+main() {
+    local password="vzbxkghb"
+    local -i passLength=${#password}
+
+    while true; do
+        # increment password
+        for ((index=passLength - 1; index != 0; --index)); do
+            local newChar=$(incLetter "${password:$index:1}")
+            if test $newChar = '#'; then
+                password="${password:0:$index}a${password:$((index + 1)):$((passLength  - index))}"
+
+                continue
+            fi
+
+                password="${password:0:$index}${newChar}${password:$((index + 1)):$((passLength  - index))}"
+            
+            break
+        done
+
+        # Passwords must contain at least two different, non-overlapping pairs of letters, like aa, bb, or zz.
+        local -i passedRequirement3=0
+        for ((index=0; index < passLength - 1; ++index)); do
+            if test ${password:$index:1} = ${password:$((index + 1)):1}; then
+                if test $((++passedRequirement3)) -eq 2; then
+                    break;
+                else
+                    ((++index))
+                fi
+            fi
+        done
+
+        if test $passedRequirement3 -lt 2; then
+            if test ${password:$((passLength - 2)):2} = "zz"; then
+                echo "$password failed requirement 3"
+            fi
+
+            continue
+        fi
+
+        # Passwords must include one increasing straight of at least three letters,
+        # like abc, bcd, cde, and so on, up to xyz. They cannot skip letters; abd doesn't count.
+        local -i passedRequirement1=0
+        for ((index=0; index < passLength - 2; ++index)); do
+            if test $(echo ${password:$index:1} | tr "a-z" "b-{") = ${password:$((index + 1)):1} -a \
+                    $(echo ${password:$((index + 1)):1} | tr "a-z" "b-{") = ${password:$((index + 2)):1}; then
+                passedRequirement1=1
+
+                break;
+            fi
+        done
+
+        if test $passedRequirement1 -eq 0; then
+            if test ${password:$((passLength - 2)):2} = "zz"; then
+                echo "$password failed requirement 1"
+            fi
+
+            continue
+        fi
+
+        echo "$password is a valid password"
+        exit
+    done
+}
+
+main "$@"
