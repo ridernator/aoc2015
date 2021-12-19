@@ -1,0 +1,33 @@
+#!/bin/bash
+
+main() {
+    local current="3113322113"
+    local -i iterations=40
+
+    echo "Iteration 0 : $current"
+
+    for ((iterIndex=0; iterIndex < iterations; ++iterIndex)); do
+        local temp=""
+
+        for ((index=0; index<${#current}; ++index)); do
+            local char=${current:$index:1}
+            local -i charCount=0
+            for ((index2=index; index2<${#current}; ++index2)); do
+                if test $char = ${current:$index2:1}; then
+                    ((++charCount))
+                else
+                    ((index += charCount - 1))
+                    break
+                fi
+            done
+
+            temp=${temp}${charCount}${char}
+        done
+
+        current=$temp
+
+        echo "Iteration $((iterIndex + 1)) complete (size : ${#current})"
+    done
+}
+
+main "$@"
