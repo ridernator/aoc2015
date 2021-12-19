@@ -1,0 +1,35 @@
+#!/bin/bash
+
+main() {
+    local -a current=( 3 1 1 3 3 2 2 1 1 3 )
+    local -i iterations=40
+
+    echo "Iteration 0 : $current"
+
+    for ((iterIndex=0; iterIndex < iterations; ++iterIndex)); do
+        local -a temp=()
+        local -i tempIndex=0
+
+        for ((index=0; index<${#current[@]}; ++index)); do
+            local char=${current[$index]}
+            local -i charCount=0
+            for ((index2=index; index2<${#current[@]}; ++index2)); do
+                if test $char = ${current[$index2]}; then
+                    ((++charCount))
+                else
+                    ((index += charCount - 1))
+                    break
+                fi
+            done
+
+            temp[$((tempIndex++))]=${charCount}
+            temp[$((tempIndex++))]=${char}
+        done
+
+        current=("${temp[@]}")
+
+        echo "Iteration $((iterIndex + 1)) complete (size : ${#current[@]})"
+    done
+}
+
+main "$@"
