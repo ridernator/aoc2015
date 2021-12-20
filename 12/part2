@@ -35,11 +35,7 @@ calculateSum() {
 
 main() {
     # Read data in
-    local -r input=$(<input)
-
-    local -i sum=$(calculateSum $input)
-
-    echo "Total sum is $sum"
+    local input=$(<input)
 
     # For each character
     for ((index=0; index < ${#input}; ++index)); do
@@ -76,18 +72,17 @@ main() {
                 fi
             done
 
-            # Remove all numbers in this object from total
-            local -i redRemoved=$(calculateSum ${input:$start:$(((end + 1) - start))})
-            ((sum -= redRemoved))
-
-            echo "Removed $redRemoved due to being red tainted"
+            # Zero all numbers in this object
+            echo "Zeroed red object (Now at $end out of ${#input})"
+            input=${input:0:$((start - 1))}$(echo ${input:$((start - 1)):$(((end + 1) - start))} | tr "123456789-" "0000000000")${input:$end}
 
             # Step on till end of object
             index=$end
         fi
     done
 
-    echo "Final total sum is $sum"
+    echo "Calculating sum of values in remaining objects"
+    echo "Final total sum is $(calculateSum $input)"
 }
 
 main "$@"
