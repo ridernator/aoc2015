@@ -1,0 +1,93 @@
+#!/bin/bash
+
+calculateSum() {
+    # Read data in
+    local -r input="$1"
+
+    local -i sum=0
+
+    # For each character
+    for ((index=0; index < ${#input}; ++index)); do
+        # If the character is part of a number
+        if [[ ${input:$index:1} =~ [0-9-] ]]; then
+            local -i startIndex=$index
+            local -i length=1
+
+            # Find length of number
+            for ((index2=index + 1; index2 < ${#input}; ++index2)); do
+                if [[ ${input:$index2:1} =~ [0-9-] ]]; then
+                    ((++length))
+                else
+                    break
+                fi
+            done
+
+            # Add number to sum
+            ((sum += ${input:$index:$length}))
+
+            # Skip characters to stop us re-reading half a number
+            ((index += length - 1))
+        fi
+    done
+
+    echo "$sum"
+}
+
+main() {
+    # Read data in
+    local -r input=$(<input)
+
+    local -i sum=$(calculateSum $input)
+
+    echo "Total sum is $sum"
+
+    # For each character
+    for ((index=0; index < ${#input}; ++index)); do
+        # If the character is the start of the string "red"
+        if test ${input:$index:6} = ":\"red\""; then
+            local -i start=0
+            local -i end=0
+
+            # Find start of object
+            local -i openBracesToFind=1
+            for ((index2=$index; index2 >= 0; --index2)); do
+                if test ${input:$index2:1} = '}'; then
+                    ((++openBracesToFind))
+                elif test ${input:$index2:1} = '{'; then
+                    if test $((--openBracesToFind)) -eq 0; then
+                        start=$index2
+
+                        break
+                    fi
+                fi
+            done
+
+            # Find end of object
+            local -i closeBracesToFind=1
+            for ((index2=$index; index2 < ${#input}; ++index2)); do
+                if test ${input:$index2:1} = '{'; then
+                    ((++closeBracesToFind))
+                elif test ${input:$index2:1} = '}'; then
+                    if test $((--closeBracesToFind)) -eq 0; then
+                        end=$index2
+
+                        break
+                    fi
+                fi
+            done
+
+            # Remove all numbers in this object from total
+            local -i redRemoved=$(calculateSum ${input:$start:$(((end + 1) - start))})
+            ((sum -= redRemoved))
+
+            echo "Removed $redRemoved due to being red tainted"
+
+            # Step on till end of object
+            index=$end
+        fi
+    done
+
+    echo "Final total sum is $sum"
+}
+
+main "$@"
