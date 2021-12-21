@@ -2,10 +2,6 @@
 
 main() {
     local -i maxSpoons=100
-    local -a sprinkles;
-    local -a peanutButter;
-    local -a frosting;
-    local -a sugar;
 
     local -i sprinklesCapacity=$(grep Sprinkles input | cut -d' ' -f3 | tr -d ',')
     local -i sprinklesDurability=$(grep Sprinkles input | cut -d' ' -f5 | tr -d ',')
