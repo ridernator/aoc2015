@@ -1,0 +1,91 @@
+#!/bin/bash
+
+main() {
+    local -i maxSpoons=100
+
+    local -i sprinklesCapacity=$(grep Sprinkles input | cut -d' ' -f3 | tr -d ',')
+    local -i sprinklesDurability=$(grep Sprinkles input | cut -d' ' -f5 | tr -d ',')
+    local -i sprinklesFlavour=$(grep Sprinkles input | cut -d' ' -f7 | tr -d ',')
+    local -i sprinklesTexture=$(grep Sprinkles input | cut -d' ' -f9 | tr -d ',')
+    local -i sprinklesCalories=$(grep Sprinkles input | cut -d' ' -f11)
+
+    local -i peanutButterCapacity=$(grep PeanutButter input | cut -d' ' -f3 | tr -d ',')
+    local -i peanutButterDurability=$(grep PeanutButter input | cut -d' ' -f5 | tr -d ',')
+    local -i peanutButterFlavour=$(grep PeanutButter input | cut -d' ' -f7 | tr -d ',')
+    local -i peanutButterTexture=$(grep PeanutButter input | cut -d' ' -f9 | tr -d ',')
+    local -i peanutButterCalories=$(grep PeanutButter input | cut -d' ' -f11)
+
+    local -i frostingCapacity=$(grep Frosting input | cut -d' ' -f3 | tr -d ',')
+    local -i frostingDurability=$(grep Frosting input | cut -d' ' -f5 | tr -d ',')
+    local -i frostingFlavour=$(grep Frosting input | cut -d' ' -f7 | tr -d ',')
+    local -i frostingTexture=$(grep Frosting input | cut -d' ' -f9 | tr -d ',')
+    local -i frostingCalories=$(grep Frosting input | cut -d' ' -f11)
+
+    local -i sugarCapacity=$(grep Sugar input | cut -d' ' -f3 | tr -d ',')
+    local -i sugarDurability=$(grep Sugar input | cut -d' ' -f5 | tr -d ',')
+    local -i sugarFlavour=$(grep Sugar input | cut -d' ' -f7 | tr -d ',')
+    local -i sugarTexture=$(grep Sugar input | cut -d' ' -f9 | tr -d ',')
+    local -i sugarCalories=$(grep Sugar input | cut -d' ' -f11)
+
+    local -i bestScore=0
+
+    for ((sprinklesIndex=1; sprinklesIndex<=$((maxSpoons - 3)); ++sprinklesIndex)); do
+        local -i capacity=$((sprinklesIndex * sprinklesCapacity))
+        local -i durability=$((sprinklesIndex * sprinklesDurability))
+        local -i flavour=$((sprinklesIndex * sprinklesFlavour))
+        local -i texture=$((sprinklesIndex * sprinklesTexture))
+        local -i calories=$((sprinklesIndex * sprinklesCalories))
+
+        for ((peanutButterIndex=1; peanutButterIndex<=$((maxSpoons - (sprinklesIndex + 2))); ++peanutButterIndex)); do
+            ((capacity += (peanutButterIndex * peanutButterCapacity)))        
+            ((durability += (peanutButterIndex * peanutButterDurability)))        
+            ((flavour += (peanutButterIndex * peanutButterFlavour)))        
+            ((texture += (peanutButterIndex * peanutButterTexture)))      
+            ((calories += (peanutButterIndex * peanutButterCalories))) 
+
+            for ((frostingIndex=1; frostingIndex<=$((maxSpoons - (sprinklesIndex + peanutButterIndex + 1))); ++frostingIndex)); do
+                ((capacity += (frostingIndex * frostingCapacity)))        
+                ((durability += (frostingIndex * frostingDurability)))        
+                ((flavour += (frostingIndex * frostingFlavour)))        
+                ((texture += (frostingIndex * frostingTexture)))    
+                ((calories += (frostingIndex * frostingCalories))) 
+
+                sugarIndex=$((maxSpoons - (sprinklesIndex + peanutButterIndex + frostingIndex)))
+                ((capacity += (sugarIndex * sugarCapacity)))        
+                ((durability += (sugarIndex * sugarDurability)))        
+                ((flavour += (sugarIndex * sugarFlavour)))        
+                ((texture += (sugarIndex * sugarTexture)))    
+                ((calories += (sugarIndex * sugarCalories)))
+                
+                if test $capacity -gt 0 -a $durability -gt 0 -a $flavour -gt 0 -a $texture -gt 0 -a $calories -eq 500; then
+                    if test $((capacity * durability * flavour * texture)) -gt $bestScore; then
+                        bestScore=$((capacity * durability * flavour * texture))
+                        echo "New best score is $bestScore"
+                    fi
+                fi
+
+                ((capacity -= (sugarIndex * sugarCapacity)))        
+                ((durability -= (sugarIndex * sugarDurability)))        
+                ((flavour -= (sugarIndex * sugarFlavour)))        
+                ((texture -= (sugarIndex * sugarTexture)))       
+                ((calories -= (sugarIndex * sugarCalories)))  
+
+                ((capacity -= (frostingIndex * frostingCapacity)))        
+                ((durability -= (frostingIndex * frostingDurability)))        
+                ((flavour -= (frostingIndex * frostingFlavour)))        
+                ((texture -= (frostingIndex * frostingTexture)))       
+                ((calories -= (frostingIndex * frostingCalories)))  
+            done
+
+            ((capacity -= (peanutButterIndex * peanutButterCapacity)))        
+            ((durability -= (peanutButterIndex * peanutButterDurability)))        
+            ((flavour -= (peanutButterIndex * peanutButterFlavour)))        
+            ((texture -= (peanutButterIndex * peanutButterTexture)))       
+            ((calories -= (peanutButterIndex * peanutButterCalories)))   
+        done
+    done
+
+    echo "Best overall score was $bestScore"
+}
+
+main "$@"
