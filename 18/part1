@@ -93,6 +93,18 @@ main() {
             grid[$index]=${gridCopy[$index]}
         done
 
+        # Print grid
+        for ((index1=0; index1<DIMENSION; ++index1)); do
+            for ((index2=0; index2<DIMENSION; ++index2)); do
+                if test ${grid[$((index1 * DIMENSION + index2))]} -eq 1; then
+                    echo -n '#'
+                else
+                    echo -n '.'
+                fi
+            done
+            echo
+        done
+
         echo "Iteration $iteration complete"
     done
 
