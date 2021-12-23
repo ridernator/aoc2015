@@ -1,0 +1,53 @@
+#!/bin/bash
+
+main() {
+    local -i NUM_LITRES=150
+
+    # Read container sizes from file
+    local -a containers=( $(cat input | tr '\n' ' ') )
+
+    local -i numContainers=${#containers[@]}
+
+    # Calculate the number of iterations we need to do
+    local -i maxIterations=$((2 ** numContainers))
+
+    local -A combinationCounts
+
+    # Loop through each iteration
+    for ((index=0; index<maxIterations; ++index)); do
+        local -i capacity=0
+        local -i containerCount=0
+
+        # Calculate how many litres this iteration can hold
+        for ((index2=0; index2<numContainers; ++index2)); do
+            ((capacity += ${containers[index2]} * ((index & (2 ** index2)) != 0)))
+
+            # If we have exceeded the capacity then break early
+            if test $capacity -gt $NUM_LITRES; then
+                break
+            fi
+
+            # Calculate count of containers
+            if test $((index & (2 ** index2))) -ne 0; then
+                ((++containerCount))
+            fi
+        done
+
+        if test $capacity -eq $NUM_LITRES; then
+            ((++combinationCounts[$containerCount]))
+
+            echo "Combination found. Number of containers is $containerCount"
+        fi
+    done
+
+    local -i minCombination=9999
+    for combination in ${!combinationCounts[@]}; do
+        if test $combination -lt $minCombination; then
+            minCombination=$combination
+        fi
+    done
+
+    echo "The minimum number of containers required is $minCombination with ${combinationCounts[$minCombination]} instances"
+}
+
+main "$@"
