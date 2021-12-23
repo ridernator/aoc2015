@@ -21,6 +21,7 @@ main() {
         for ((index2=0; index2<numContainers; ++index2)); do
             ((capacity += ${containers[index2]} * ((index & (2 ** index2)) != 0)))
 
+            # If we have exceeded the capacity then break early
             if test $capacity -gt $NUM_LITRES; then
                 break
             fi
