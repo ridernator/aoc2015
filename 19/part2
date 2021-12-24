@@ -1,0 +1,67 @@
+#!/bin/bash
+
+declare -a from
+declare -a to
+declare -i numRules
+
+permute() {
+    local medicine="$1"
+
+    local -a results
+    local -i resultsIndex=0
+    for ((index=0; index<${#medicine}; ++index)); do
+        for ((ruleIndex=0; ruleIndex<numRules; ++ruleIndex)); do
+            if [[ ${medicine:$index} =~ ^${from[$ruleIndex]} ]]; then
+                results[$((resultsIndex++))]="${medicine:0:$index}${to[$ruleIndex]}${medicine:$((index + ${#from[$ruleIndex]}))}"
+            fi
+        done
+    done
+
+    echo ${results[@]} | tr " " "\n" | sort | uniq
+}
+
+main() {
+    local INPUT=input
+    local medicine=""
+
+    # Load rules
+    local -i ruleIndex=0
+    while read direction; do
+        if [[ $direction =~ .*=\>.* ]]; then
+            to[$ruleIndex]=$(echo $direction | cut -d' ' -f1)
+            from[$ruleIndex]=$(echo $direction | cut -d' ' -f3)
+
+            ((++ruleIndex))
+        elif test -n "$direction"; then
+            medicine=$direction
+        fi
+    done < $INPUT
+
+    numRules=${#from[@]}
+
+    local -i step=0
+
+    # Each time round. Generate possible reverse results and continue with 
+    # the smallest of the results
+    while test $medicine != "e"; do
+        local -a results=( $(permute $medicine) )
+        local -i smallestSize=9999999
+        local smallest
+
+        for result in ${results[@]}; do
+            if test ${#result} -lt $smallestSize; then
+                smallest=$result
+                smallestSize=${#result}
+            fi
+        done
+
+        medicine=$smallest
+
+        echo "New medicine : $medicine"
+        ((++step))
+    done
+
+    echo "Number of steps taken was $step"
+}
+
+main "$@"
