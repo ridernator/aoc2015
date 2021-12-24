@@ -1,0 +1,76 @@
+#!/bin/bash
+
+main() {
+    local INPUT=input
+
+    # Registers
+    local -i a=0
+    local -i b=0
+
+    # Program counter
+    local -i pc=0
+
+    # Instructions
+    local -a instructions
+
+    # Read each line
+    local -i lineIndex=0
+    while read line; do
+        instructions[$((lineIndex++))]="$line"
+    done < $INPUT
+
+    local -i instructionsSize=${#instructions[@]}
+
+    # Run program
+    while test $pc -lt $instructionsSize -a $pc -ge 0; do
+        local instruction=${instructions[$pc]}
+        local argument1=$(echo $instruction | cut -d' ' -f2 | tr -d ',')
+        local argument2=$(echo $instruction | cut -d' ' -f3)
+
+        if [[ $instruction =~ hlf.* ]]; then
+            if test $argument1 = "a"; then
+                ((a /= 2))
+            else
+                ((b /= 2))
+            fi
+
+            ((++pc))
+        elif [[ $instruction =~ tpl.* ]]; then
+            if test $argument1 = "a"; then
+                ((a *= 3))
+            else
+                ((b *= 3))
+            fi
+            
+            ((++pc))
+        elif [[ $instruction =~ inc.* ]]; then
+            if test $argument1 = "a"; then
+                ((++a))
+            else
+                ((++b))
+            fi
+            
+            ((++pc))
+        elif [[ $instruction =~ jmp.* ]]; then
+            ((pc += argument1))
+        elif [[ $instruction =~ jie.* ]]; then
+            if test $((${!argument1} % 2)) -eq 0; then
+                ((pc += argument2))
+            else
+                ((++pc))
+            fi
+        elif [[ $instruction =~ jio.* ]]; then
+            if test ${!argument1} -eq 1; then
+                ((pc += argument2))
+            else
+                ((++pc))
+            fi
+        fi
+
+        echo "Executed $instruction (pc=$pc, a=$a, b=$b)"
+    done
+
+    echo "Value in register b at the end of the program is $b"
+}
+
+main "$@"
