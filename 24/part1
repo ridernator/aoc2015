@@ -1,0 +1,46 @@
+#!/bin/bash
+
+main() {
+    local -r INPUT=input
+    local -a presents
+
+    # Calculate sum of weights
+    local -i sum=0
+    local -i presentIndex=0
+    while read present; do
+        presents[$((presentIndex++))]=$present
+        ((sum += present))
+    done < $INPUT
+
+    local -i findWeight=$((sum / 3))
+
+    local -i qe=0
+    local -i minQE=99999999999999
+
+    # Try with 6
+    for ((index1=0; index1<${#presents[@]}; ++index1)); do
+        for ((index2=index1+1; index2<${#presents[@]}; ++index2)); do
+            for ((index3=index2+1; index3<${#presents[@]}; ++index3)); do
+                for ((index4=index3+1; index4<${#presents[@]}; ++index4)); do
+                    for ((index5=index4+1; index5<${#presents[@]}; ++index5)); do
+                        for ((index6=index5+1; index6<${#presents[@]}; ++index6)); do
+                            if test $((${presents[$index1]} + ${presents[$index2]} + ${presents[$index3]} + ${presents[$index4]} + ${presents[$index5]} + ${presents[$index6]})) -eq $findWeight; then
+                                qe=$((${presents[$index1]} * ${presents[$index2]} * ${presents[$index3]} * ${presents[$index4]} * ${presents[$index5]} * ${presents[$index6]}))
+
+                                if test $qe -lt $minQE; then
+                                    minQE=$qe
+                                fi
+
+                                echo "Found ${presents[$index1]}, ${presents[$index2]}, ${presents[$index3]}, ${presents[$index4]}, ${presents[$index5]} and ${presents[$index6]}, QE=$((${presents[$index1]} * ${presents[$index2]} * ${presents[$index3]} * ${presents[$index4]} * ${presents[$index5]} * ${presents[$index6]}))"
+                            fi
+                        done
+                    done
+                done
+            done
+        done
+    done
+
+    echo "Minimum QE=$minQE"
+}
+
+main "$@"
