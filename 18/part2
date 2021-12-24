@@ -1,0 +1,134 @@
+#!/bin/bash
+
+main() {
+    local -i DIMENSION=100
+
+    local -i ITERATIONS=100
+
+    local -a grid
+    local -a gridCopy
+
+    local -i index=0
+
+    # Read in initial grid
+    echo "Reading in initial state of grid"
+    while read gridLine; do
+        for ((char=0; char<${#gridLine}; ++char)); do
+            if test ${gridLine:$char:1} = '#'; then
+                grid[$index]=1
+            else
+                grid[$index]=0
+            fi
+
+            ((++index))
+        done
+    done < input
+
+    # Set 4 corner lights to be on
+    grid[0]=1
+    grid[$((DIMENSION - 1))]=1
+    grid[$(((DIMENSION - 1) * DIMENSION))]=1
+    grid[$((DIMENSION * DIMENSION - 1))]=1
+
+    # Loop through each iteration
+    for ((iteration=0; iteration<ITERATIONS; ++iteration)); do
+        # Calculate new positions and copy to gridCopy
+        for ((index1=0; index1<DIMENSION; ++index1)); do
+            for ((index2=0; index2<DIMENSION; ++index2)); do
+                local -i neighbours=0
+
+                # Add left neighbour
+                if test $index1 -ne 0; then
+                    ((neighbours += ${grid[$(((index1 - 1) * DIMENSION + index2))]}))
+                fi
+
+                # Add right neighbour
+                if test $index1 -ne $((DIMENSION - 1)); then
+                    ((neighbours += ${grid[$(((index1 + 1) * DIMENSION + index2))]}))
+                fi
+
+                # Add top neighbour
+                if test $index2 -ne 0; then
+                    ((neighbours += ${grid[$((index1 * DIMENSION + (index2 - 1)))]}))
+                fi
+
+                # Add bottom neighbour
+                if test $index2 -ne $((DIMENSION - 1)); then
+                    ((neighbours += ${grid[$((index1 * DIMENSION + (index2 + 1)))]}))
+                fi
+
+                # Add top left neighbour
+                if test $index1 -ne 0 -a $index2 -ne 0; then
+                    ((neighbours += ${grid[$(((index1 - 1) * DIMENSION + (index2 - 1)))]}))
+                fi
+
+                # Add top right neighbour
+                if test $index1 -ne $((DIMENSION - 1)) -a $index2 -ne 0; then
+                    ((neighbours += ${grid[$(((index1 + 1) * DIMENSION + (index2 - 1)))]}))
+                fi
+
+                # Add bottom right neighbour
+                if test $index1 -ne $((DIMENSION - 1)) -a $index2 -ne $((DIMENSION - 1)); then
+                    ((neighbours += ${grid[$(((index1 + 1) * DIMENSION + (index2 + 1)))]}))
+                fi
+
+                # Add bottom left neighbour
+                if test $index1 -ne 0 -a $index2 -ne $((DIMENSION - 1)); then
+                    ((neighbours += ${grid[$(((index1 - 1) * DIMENSION + (index2 + 1)))]}))
+                fi
+
+                # Calculate if light should be on based on number of neighbours
+                if test ${grid[$((index1 * DIMENSION + index2))]} -eq 1; then
+                    if test $neighbours -eq 2 -o $neighbours -eq 3; then
+                        gridCopy[$((index1 * DIMENSION + index2))]=1
+                    else
+                        gridCopy[$((index1 * DIMENSION + index2))]=0
+                    fi
+                else
+                    if test $neighbours -eq 3; then
+                        gridCopy[$((index1 * DIMENSION + index2))]=1
+                    else
+                        gridCopy[$((index1 * DIMENSION + index2))]=0
+                    fi
+                fi
+            done
+        done
+
+        # Copy grid back
+        for ((index=0; index<${#grid[@]}; ++index)); do
+            grid[$index]=${gridCopy[$index]}
+        done
+
+        # Set 4 corner lights to be on
+        grid[0]=1
+        grid[$((DIMENSION - 1))]=1
+        grid[$(((DIMENSION - 1) * DIMENSION))]=1
+        grid[$((DIMENSION * DIMENSION - 1))]=1
+
+        # Print grid
+        for ((index1=0; index1<DIMENSION; ++index1)); do
+            for ((index2=0; index2<DIMENSION; ++index2)); do
+                if test ${grid[$((index1 * DIMENSION + index2))]} -eq 1; then
+                    echo -n '#'
+                else
+                    echo -n '.'
+                fi
+            done
+            echo
+        done
+
+        echo "Iteration $iteration complete"
+    done
+
+    # Count number of lights left on after all iterations
+    local lightsOnCount=0
+    for light in ${grid[@]}; do
+        if test $light -eq 1; then
+            ((++lightsOnCount))
+        fi
+    done
+
+    echo "Number of lights on after $ITERATIONS iterations is $lightsOnCount"
+}
+
+main "$@"
