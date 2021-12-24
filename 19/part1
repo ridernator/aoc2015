@@ -1,0 +1,46 @@
+#!/bin/bash
+
+main() {
+    local INPUT=input
+    local -a from
+    local -a to
+    local medicine=""
+
+    # Load rules
+    echo "Loading rules"
+    local -i ruleIndex=0
+    while read direction; do
+        if [[ $direction =~ .*=\>.* ]]; then
+            from[$ruleIndex]=$(echo $direction | cut -d' ' -f1)
+            to[$ruleIndex]=$(echo $direction | cut -d' ' -f3)
+
+            ((++ruleIndex))
+        elif test -n "$direction"; then
+            medicine=$direction
+        fi
+    done < $INPUT
+
+    local -i numRules=${#from[@]}
+
+    for ((rule=0; rule<numRules; ++rule)); do
+        echo "Rule $rule : ${from[$rule]} -> ${to[$rule]}"
+    done
+
+    echo "Medicine : $medicine"
+
+    local -a results
+    local -i resultsIndex=0
+    for ((index=0; index<${#medicine}; ++index)); do
+        for ((ruleIndex=0; ruleIndex<numRules; ++ruleIndex)); do
+            if [[ ${medicine:$index} =~ ^${from[$ruleIndex]} ]]; then
+                results[$((resultsIndex++))]="${medicine:0:$index}${to[$ruleIndex]}${medicine:$((index + ${#from[$ruleIndex]}))}"
+            fi
+        done
+    done
+
+    local -i numMolecules=$(echo ${results[@]} | tr " " "\n" | sort | uniq | wc -l)
+
+    echo "Number of unique molecules possible = $numMolecules"
+}
+
+main "$@"
