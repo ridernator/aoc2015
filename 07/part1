@@ -1,0 +1,126 @@
+#!/bin/bash
+
+main() {
+    local -r INPUT=input
+    local -A signals
+    local -a commands
+
+    # Read each command
+    local -i commandIndex=0
+    while read command; do
+        commands[$((commandIndex++))]="$command"
+    done < $INPUT
+
+    # Read each command
+    while test -z "${signals["a"]}"; do
+        for ((commandIndex=0; commandIndex<${#commands[@]}; ++commandIndex)); do
+            command=${commands[$commandIndex]}
+
+            if test -n "$command"; then
+                if [[ $command =~ .*AND.* ]]; then
+                    local signalA=$(echo $command | cut -d' ' -f1)
+                    local signalB=$(echo $command | cut -d' ' -f3)
+                    local target=$(echo $command | cut -d' ' -f5)
+
+                    if [[ $signalA =~ .*[a-z].* ]]; then
+                        signalA=${signals[$signalA]}
+                    fi
+
+                    if [[ $signalB =~ .*[a-z].* ]]; then
+                        signalB=${signals[$signalB]}
+                    fi
+
+                    if test -n "$signalA" -a -n "$signalB"; then
+                        signals[$target]=$(((signalA & signalB) & 0xFFFF))
+                        commands[$commandIndex]=""
+                        echo "$command : $target = $signalA AND $signalB = ${signals[$target]}"
+                    fi
+                elif [[ $command =~ .*OR.* ]]; then
+                    local signalA=$(echo $command | cut -d' ' -f1)
+                    local signalB=$(echo $command | cut -d' ' -f3)
+                    local target=$(echo $command | cut -d' ' -f5)
+                    
+                    if [[ $signalA =~ .*[a-z].* ]]; then
+                        signalA=${signals[$signalA]}
+                    fi
+
+                    if [[ $signalB =~ .*[a-z].* ]]; then
+                        signalB=${signals[$signalB]}
+                    fi
+
+                    if test -n "$signalA" -a -n "$signalB"; then
+                        signals[$target]=$(((signalA | signalB) & 0xFFFF))
+                        commands[$commandIndex]=""
+                        echo "$command : $target = $signalA OR $signalB = ${signals[$target]}"
+                    fi
+                elif [[ $command =~ .*NOT.* ]]; then
+                    local signalA=$(echo $command | cut -d' ' -f2)
+                    local target=$(echo $command | cut -d' ' -f4)
+                    
+                    if [[ $signalA =~ .*[a-z].* ]]; then
+                        signalA=${signals[$signalA]}
+                    fi
+
+                    if test -n "$signalA"; then
+                        signals[$target]=$((~signalA & 0xFFFF))
+                        commands[$commandIndex]=""
+                        echo "$command : $target = NOT $signalA = ${signals[$target]}"
+                    fi
+                elif [[ $command =~ .*LSHIFT.* ]]; then
+                    local signalA=$(echo $command | cut -d' ' -f1)
+                    local signalB=$(echo $command | cut -d' ' -f3)
+                    local target=$(echo $command | cut -d' ' -f5)
+                    
+                    if [[ $signalA =~ .*[a-z].* ]]; then
+                        signalA=${signals[$signalA]}
+                    fi
+
+                    if [[ $signalB =~ .*[a-z].* ]]; then
+                        signalB=${signals[$signalB]}
+                    fi
+
+                    if test -n "$signalA" -a -n "$signalB"; then
+                        signals[$target]=$(((signalA << signalB) & 0xFFFF))
+                        commands[$commandIndex]=""
+                        echo "$command : $target = $signalA << $signalB = ${signals[$target]}"
+                    fi
+                elif [[ $command =~ .*RSHIFT.* ]]; then
+                    local signalA=$(echo $command | cut -d' ' -f1)
+                    local signalB=$(echo $command | cut -d' ' -f3)
+                    local target=$(echo $command | cut -d' ' -f5)
+                    
+                    if [[ $signalA =~ .*[a-z].* ]]; then
+                        signalA=${signals[$signalA]}
+                    fi
+
+                    if [[ $signalB =~ .*[a-z].* ]]; then
+                        signalB=${signals[$signalB]}
+                    fi
+
+                    if test -n "$signalA" -a -n "$signalB"; then
+                        signals[$target]=$(((signalA >> signalB) & 0xFFFF))
+                        commands[$commandIndex]=""
+                        echo "$command : $target = $signalA >> $signalB = ${signals[$target]}"
+                    fi
+                else
+                    local signalA=$(echo $command | cut -d' ' -f1)
+                    local target=$(echo $command | cut -d' ' -f3)
+
+                    if [[ $signalA =~ .*[a-z].* ]]; then
+                        signalA=${signals[$signalA]}
+                    fi
+
+                    if test -n "$signalA"; then
+                        signals[$target]=$signalA
+                        commands[$commandIndex]=""
+                        echo "$command : $target = ${signals[$target]}"
+                    fi
+                fi
+            fi
+        done
+    done
+
+    echo "Signal on a is ${signals["a"]}"
+}
+
+main "$@"
