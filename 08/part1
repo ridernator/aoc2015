@@ -1,0 +1,37 @@
+#!/bin/bash
+
+main() {
+    local INPUT=input
+    local -i totalChars=0
+    local -i totalPrintableChars=0
+
+    # Read each line (Remember to use -r to ignore backslash)
+    while read -r line; do
+        # 2 extra chars because of start and end "s
+        local -i extraChars=2
+
+        # For each character in the line
+        for ((index=1; index<$((${#line} - 1)); ++index)); do
+            # If we hit a backslash
+            if test ${line:$index:1} = '\'; then
+                local -i extraCharsHere=1
+
+                # If this is a hex char
+                if test ${line:$((index + 1)):1} = 'x'; then
+                    ((extraCharsHere += 2))
+                fi
+
+                ((index += extraCharsHere))
+                ((extraChars += extraCharsHere))
+            fi
+        done
+
+        echo "Line $line has ${#line} chars. $((${#line} - $extraChars)) printable. Difference is $extraChars"
+        ((totalChars += ${#line}))
+        ((totalPrintableChars += (${#line} - extraChars)))
+    done < $INPUT
+
+    echo "Total chars in file=$totalChars. Printable chars=$totalPrintableChars. Difference=$((totalChars - totalPrintableChars))"
+}
+
+main "$@"

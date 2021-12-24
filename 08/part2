@@ -1,0 +1,27 @@
+#!/bin/bash
+
+main() {
+    local INPUT=input
+    local -i totalCharsBefore=0
+    local -i totalCharsAfter=0
+
+    # Read each line (Remember to use -r to ignore backslash)
+    while read -r line; do
+        # Replace \ with \\
+        line2=${line//\\/\\\\}
+
+        # Then replace " with \"
+        line2=${line2//\"/\\\"}
+
+        # Then add start and end "s again
+        line2="\"${line2}\""
+        echo "$Line $line becomes $line2, gaining $((${#line2} - ${#line})) chars"
+
+        ((totalCharsBefore += ${#line}))
+        ((totalCharsAfter += ${#line2}))
+    done < $INPUT
+
+    echo "Total chars before=$totalCharsBefore. Total chars after=$totalCharsAfter. Difference=$((totalCharsAfter - totalCharsBefore))"
+}
+
+main "$@"
