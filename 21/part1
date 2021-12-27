@@ -1,0 +1,159 @@
+#!/bin/bash
+
+# Test who would win under different scenarios
+willWin() {
+    local -i playerLife="$1"
+    local -i playerDamage="$2"
+    local -i playerArmor="$3"
+
+    local -i bossLife="$4"
+    local -i bossDamage="$5"
+    local -i bossArmor="$6"
+
+    while true; do
+        # Player hits boss
+        local -i playerScore=$((playerDamage - bossArmor))
+
+        if test $playerScore -lt 1; then
+            playerScore=1
+        fi
+
+        ((bossLife -= playerScore))
+
+        # Is boss dead
+        if test $bossLife -le 0; then
+            return 0
+        fi
+
+        # Boss hits player
+        local -i bossScore=$((bossDamage - playerArmor))
+        
+        if test $bossScore -lt 1; then
+            bossScore=1
+        fi
+
+        ((playerLife -= bossScore))
+
+        # Is player dead
+        if test $playerLife -le 0; then
+            return 1
+        fi
+    done
+}
+
+main() {
+    local -r INPUT=input
+
+    # Shop prices etc. Add extra items for free nothings
+    local -rA WEAPON_COST=( ["dagger"]=8 \
+                            ["shortSword"]=10 \
+                            ["warHammer"]=25 \
+                            ["longSword"]=40 \
+                            ["greatAxe"]=74 )
+    local -rA WEAPON_DAMAGE=( ["dagger"]=4 \
+                              ["shortSword"]=5 \
+                              ["warHammer"]=6 \
+                              ["longSword"]=7 \
+                              ["greatAxe"]=8 )
+
+    local -rA ARMOR_COST=( ["none"]=0 \
+                           ["leather"]=13 \
+                           ["chainMail"]=31 \
+                           ["splintMail"]=53 \
+                           ["bandedMail"]=75 \
+                           ["plateMail"]=102 )
+    local -rA ARMOR_ARMOR=( ["none"]=0 \
+                            ["leather"]=1 \
+                            ["chainMail"]=2 \
+                            ["splintMail"]=3 \
+                            ["bandedMail"]=4 \
+                            ["plateMail"]=5 )
+
+    local -rA RING_COST=( ["damage0"]=0 \
+                          ["damage1"]=25 \
+                          ["damage2"]=50 \
+                          ["damage3"]=100 \
+                          ["defense0"]=0 \
+                          ["defense1"]=20 \
+                          ["defense2"]=40 \
+                          ["defense3"]=80 )
+    local -rA RING_DAMAGE=( ["damage0"]=0 \
+                            ["damage1"]=1 \
+                            ["damage2"]=2 \
+                            ["damage3"]=3 \
+                            ["defense0"]=0 \
+                            ["defense1"]=0 \
+                            ["defense2"]=0 \
+                            ["defense3"]=0 )
+    local -rA RING_ARMOR=( ["damage0"]=0 \
+                           ["damage1"]=0 \
+                           ["damage2"]=0 \
+                           ["damage3"]=0 \
+                           ["defense0"]=0 \
+                           ["defense1"]=1 \
+                           ["defense2"]=2 \
+                           ["defense3"]=3 )
+
+    # Read in boss data
+    local -ri BOSS_LIFE=$(grep Points $INPUT | cut -d' ' -f3)
+    local -ri BOSS_DAMAGE=$(grep Damage $INPUT | cut -d' ' -f2)
+    local -ri BOSS_ARMOR=$(grep Armor $INPUT | cut -d' ' -f2)
+
+    local -ri PLAYER_LIFE=100
+
+    local -i minCost=999999999
+    local -i cost=0
+    local -i damage=0
+    local -i armor=0
+
+    # Loop through everything
+    for ring1 in ${!RING_COST[@]}; do
+        ((cost += ${RING_COST[$ring1]}))
+        ((damage += ${RING_DAMAGE[$ring1]}))
+        ((armor += ${RING_ARMOR[$ring1]}))
+
+        for ring2 in ${!RING_COST[@]}; do
+            if test $ring1 != $ring2; then
+                ((cost += ${RING_COST[$ring2]}))
+                ((damage += ${RING_DAMAGE[$ring2]}))
+                ((armor += ${RING_ARMOR[$ring2]}))
+
+                for cloth in ${!ARMOR_COST[@]}; do
+                    ((cost += ${ARMOR_COST[$cloth]}))
+                    ((armor += ${ARMOR_ARMOR[$cloth]}))
+
+                    for weapon in ${!WEAPON_COST[@]}; do
+                        ((cost += ${WEAPON_COST[$weapon]}))
+                        ((damage += ${WEAPON_DAMAGE[$weapon]}))
+
+                        if willWin $PLAYER_LIFE $damage $armor $BOSS_LIFE $BOSS_DAMAGE $BOSS_ARMOR; then
+                            if test $cost -lt $minCost; then
+                                minCost=$cost
+
+                                echo "New minimum cost found : $minCost ($weapon, $cloth, $ring1, $ring2)"
+                            fi
+                        fi
+
+                        ((cost -= ${WEAPON_COST[$weapon]}))
+                        ((damage -= ${WEAPON_DAMAGE[$weapon]}))
+                    done
+
+                    ((cost -= ${ARMOR_COST[$cloth]}))
+                    ((armor -= ${ARMOR_ARMOR[$cloth]}))
+                done
+
+                ((cost -= ${RING_COST[$ring2]}))
+                ((damage -= ${RING_DAMAGE[$ring2]}))
+                ((armor -= ${RING_ARMOR[$ring2]}))
+            fi
+        done
+
+        ((cost -= ${RING_COST[$ring1]}))
+        ((damage -= ${RING_DAMAGE[$ring1]}))
+        ((armor -= ${RING_ARMOR[$ring1]}))
+    done
+
+    echo "Minimum cost required to win : $minCost"
+}
+
+main "$@"
