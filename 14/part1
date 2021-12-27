@@ -1,0 +1,39 @@
+#!/bin/bash
+
+main() {
+    local -i maxDist=0
+    local -i period=2503
+
+    # Read each line
+    while read line; do
+        local -i dist=0
+
+        # Read variables in
+        local    name=$(echo $line | cut -d' ' -f1)
+        local -i speed=$(echo $line | cut -d' ' -f4)
+        local -i flyPeriod=$(echo $line | cut -d' ' -f7)
+        local -i restPeriod=$(echo $line | cut -d' ' -f14)
+
+        # Add on fullblocks
+        ((dist += (period / (flyPeriod + restPeriod)) * flyPeriod * speed))
+
+        # Add on partial blocks
+        local -i leftOverPeriod=$((period % (flyPeriod + restPeriod)))
+        local -i partialPeriod=$flyPeriod
+        if test $leftOverPeriod -lt $partialPeriod; then
+            partialPeriod=$leftOverPeriod
+        fi
+
+        ((dist += partialPeriod * speed))
+
+        if test $dist -gt $maxDist; then
+            maxDist=$dist
+        fi
+
+        echo "$name can fly ${dist}km in ${period}s"
+    done < input
+
+    echo "Maximum distance flown was ${maxDist}km"
+}
+
+main "$@"

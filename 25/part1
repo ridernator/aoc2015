@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# NB There is a better way of doing this :
+# Calculate the number of steps needed to get to row, col
+# The perform the X and % that many times
+
+main() {
+    local filename="input"
+
+    # Initial seed at 0,0
+    local -i lastValue=20151125
+
+    # Row and column to search for
+    local -i requiredRow=$(cat "$filename" | cut -d',' -f2 | awk '{print $NF}')
+    local -i requiredCol=$(cat "$filename" | cut -d'.' -f2 | awk '{print $NF}')
+
+    echo "Searching for row $requiredRow, column $requiredCol"
+
+    local -i currentRow=1
+    local -i currentCol=1
+   
+    # Loop forever
+    while true; do
+        local -i resetCol=0
+
+        # If we have hit the top boundary, then reset row to column + 1
+        # and reset column to 1
+        if test $((--currentRow)) -eq 0; then
+            currentRow=$((currentCol + 1))
+            resetCol=1
+        fi
+
+        if test $resetCol -eq 1; then
+            currentCol=1
+        else
+            ((++currentCol))
+        fi
+
+        # Calculate new value
+        value=$lastValue
+
+        ((value *= 252533))
+        ((value %= 33554393))
+
+        # If we have found the correct position then output number and exit
+        if test $currentRow -eq $requiredRow -a \
+                $currentCol -eq $requiredCol; then
+            echo "Number at $requiredRow, $requiredCol = $value"
+            exit
+        else
+            lastValue=$value
+        fi
+
+        echo "Currently at row $currentRow, column $currentCol"
+    done
+}
+
+main "$@"

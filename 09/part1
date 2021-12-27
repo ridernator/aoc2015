@@ -1,0 +1,96 @@
+#!/bin/bash
+
+main() {
+    local INPUT=input
+    local -A distances
+    local -A towns
+
+    # Create lookup table of towns to indexes
+    local -i townIndex=0
+    for town in $(cat $INPUT | cut -d' ' -f1,3 | tr " " "\n" | sort | uniq); do
+        towns[$town]=$((townIndex++))
+        echo "Loaded in town $town"
+    done
+
+    # Read each line
+    while read line; do
+        local townA=${towns[$(echo $line | cut -d' ' -f1)]}
+        local townB=${towns[$(echo $line | cut -d' ' -f3)]}
+        local -i distance=$(echo $line | cut -d' ' -f5)
+        local minTown=$townA
+        local maxTown=$townB
+
+        # Put towns in min max order
+        if test $townB -lt $minTown; then
+            minTown=$townB
+            maxTown=$townA
+        fi
+
+        # Add distance to table
+        distances["${minTown},${maxTown}"]=$distance
+    done < $INPUT
+
+    local -i numTowns=${#towns[@]}
+
+    # Iterator used to loop over combinations
+    local -a iterator=( $(seq $((numTowns - 1)) -1 0) )
+
+    # Find minimum journey
+    local minDistance=999999999
+    while true; do
+        local -i distance=0
+
+        # For each hop, add the distance to the total
+        for ((index=0; index<numTowns-1; ++index)); do
+            local -i minTown=${iterator[$index]}
+            local -i maxTown=${iterator[$((index + 1))]}
+
+            if test $maxTown -lt $minTown; then
+                minTown=${iterator[$((index + 1))]}
+                maxTown=${iterator[$index]}
+            fi
+
+            ((distance += ${distances["${minTown},${maxTown}"]}))
+        done
+
+        # See if this journey was the shortest yet
+        if test $distance -lt $minDistance; then
+            minDistance=$distance
+
+            echo "New minimum distance found : $minDistance"
+        fi
+
+        # Increment iterator
+        while true; do
+            # Increment
+            for ((index=0; index<numTowns; ++index)); do
+                if test $((++iterator[$index])) -lt $numTowns; then
+                    break
+                else
+                    iterator[$index]=0
+                fi
+            done
+
+            # If we have tries all combinations then exit
+            if test $index -eq $numTowns; then
+                break 2
+            fi
+
+            # Check for duplicates in iterator
+            for ((index1=0; index1<numTowns; ++index1)); do
+                for ((index2=index1+1; index2<numTowns; ++index2)); do
+                    if test ${iterator[$index1]} -eq ${iterator[$index2]}; then
+                        continue 3
+                    fi
+                done
+            done
+
+            # Found a new good combination so exit to start of loop
+            break
+        done
+    done
+
+    echo "The minimum distance is $minDistance"
+}
+
+main "$@"

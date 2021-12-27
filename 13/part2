@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# Adding myself to the table as somebody who provides no happiness
+# is the same thing as changing it from a round table to all
+# sitting one one side of a table
+# But we have to test every combination as it does not rotate
+
+main() {
+    local -A rules
+    local -A initials
+
+    # Read each rule
+    echo "Parsing rules"
+    while read rule; do
+        # Get key for rule (firstInital+secondInitial)
+        local firstInitial=${rule:0:1}
+        secondInitial=$(echo $rule | awk -F' ' '{print $NF}')
+        secondInitial=${secondInitial:0:1}
+
+        # Get increment
+        local -i increment=$(echo $rule | cut -d' ' -f4)
+        if test $(echo $rule | cut -d' ' -f3) = "lose"; then
+            ((increment *= -1))
+        fi
+
+        rules[${firstInitial}${secondInitial}]=$increment
+        initials[$firstInitial]=1
+
+        echo "    rules[${firstInitial}${secondInitial}]=$increment"
+    done < input
+
+    # Create people array and initial layout
+    local -a people
+    local -a layout
+    local -i index=0
+    for initial in "${!initials[@]}"; do
+        layout[$index]=$index
+        people[$((index++))]=$initial
+    done
+
+    local -i maxScore=-9999999
+    while true; do
+        # Calculate score
+        local -i score=0
+        for ((index=0; index < ${#layout[@]}; ++index)); do
+            if test $index -eq 0; then
+                ((score += ${rules[${people[${layout[$index]}]}${people[${layout[$((index + 1))]}]}]}))
+            elif test $index -eq $((${#layout[@]} - 1)); then
+                ((score += ${rules[${people[${layout[$index]}]}${people[${layout[$((index - 1))]}]}]}))
+            else
+                ((score += ${rules[${people[${layout[$index]}]}${people[${layout[$((index - 1))]}]}]}))
+                ((score += ${rules[${people[${layout[$index]}]}${people[${layout[$((index + 1))]}]}]}))
+            fi
+        done
+
+        # Store score if it is the new maximum
+        if test $score -gt $maxScore; then
+            maxScore=$score
+            echo "Found new maximum happiness of $maxScore"
+        fi
+
+        # Get next iterator
+        while true; do
+            # Create next attempted iterator
+            local -i column=$((${#people[@]} - 1))
+            ((++layout[column]))
+
+            while true; do
+                if test ${layout[$column]} -eq ${#people[@]}; then
+                    layout[$column]=0
+                    ((++layout[--column]))
+                else
+                    break
+                fi
+            done
+
+            # If we have run out of iterators then print max and exit
+            if test $column -eq -1; then
+                echo "Maximum happiness is $maxScore"
+                break 2
+            fi
+
+            # Test if this iterator is valid. If it is not then create a new one otherwise break out
+            local -A founds=()
+            for element in ${layout[@]}; do
+                if test "${founds[$element]}" = 1; then
+                    continue 2
+                else
+                    founds[$element]=1
+                fi
+            done
+
+            break
+        done
+
+        #echo "New iterator = ${layout[@]}"
+    done
+}
+
+main "$@"

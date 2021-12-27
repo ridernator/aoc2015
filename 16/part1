@@ -1,0 +1,184 @@
+#!/bin/bash
+
+main() {
+    local -i requiredChildren=3
+    local -i requiredCats=7
+    local -i requiredSamoyeds=2
+    local -i requiredPomeranians=3
+    local -i requiredAkitas=0
+    local -i requiredVizslas=0
+    local -i requiredGoldfish=5
+    local -i requiredTrees=3
+    local -i requiredCars=2
+    local -i requiredPerfumes=1
+
+    local -a children
+    local -a cats
+    local -a samoyeds
+    local -a pomeranians
+    local -a akitas
+    local -a vizslas
+    local -a goldfish
+    local -a trees
+    local -a cars
+    local -a perfumes
+
+    # Initialise arrays
+    for ((index=1; index<=500; ++index)); do
+        children[$index]=-1
+        cats[$index]=-1
+        samoyeds[$index]=-1
+        pomeranians[$index]=-1
+        akitas[$index]=-1
+        vizslas[$index]=-1
+        goldfish[$index]=-1
+        trees[$index]=-1
+        cars[$index]=-1
+        perfumes[$index]=-1
+    done
+
+    # Read each line
+    while read person; do
+        # Look up sue number
+        local -i number=$(echo $person | cut -d' ' -f2 | tr -d ":")
+
+        # Look up rest of data
+        if [[ $person =~ "children" ]] ; then
+            children[$number]=$(echo ${person#*children: } | cut -d',' -f1)
+        fi
+
+        if [[ $person =~ "cats" ]] ; then
+            cats[$number]=$(echo ${person#*cats: } | cut -d',' -f1)
+        fi
+        
+        if [[ $person =~ "samoyeds" ]] ; then
+            samoyeds[$number]=$(echo ${person#*samoyeds: } | cut -d',' -f1)
+        fi
+        
+        if [[ $person =~ "pomeranians" ]] ; then
+            pomeranians[$number]=$(echo ${person#*pomeranians: } | cut -d',' -f1)
+        fi
+        
+        if [[ $person =~ "akitas" ]] ; then
+            akitas[$number]=$(echo ${person#*akitas: } | cut -d',' -f1)
+        fi
+        
+        if [[ $person =~ "vizslas" ]] ; then
+            vizslas[$number]=$(echo ${person#*vizslas: } | cut -d',' -f1)
+        fi
+        
+        if [[ $person =~ "goldfish" ]] ; then
+            goldfish[$number]=$(echo ${person#*goldfish: } | cut -d',' -f1)
+        fi
+        
+        if [[ $person =~ "trees" ]] ; then
+            trees[$number]=$(echo ${person#*trees: } | cut -d',' -f1)
+        fi
+        
+        if [[ $person =~ "cars" ]] ; then
+            cars[$number]=$(echo ${person#*cars: } | cut -d',' -f1)
+        fi
+
+        if [[ $person =~ "perfumes" ]] ; then
+            perfumes[$number]=$(echo ${person#*perfumes: } | cut -d',' -f1)
+        fi
+    done < input
+
+    # Calculate score for each Sue an find best Sue
+    local -i bestSue=1
+    local -i bestSueScore=-1    
+    for ((index=1; index<=500; ++index)); do
+        local -i score=0
+        
+        if test ${children[$index]} -ne -1; then
+            if test ${children[$index]} -eq $requiredChildren; then
+                ((++score))
+            else
+                continue
+            fi
+        fi
+        
+        if test ${cats[$index]} -ne -1; then
+            if test ${cats[$index]} -eq $requiredCats; then
+                ((++score))
+            else
+                continue
+            fi
+        fi
+        
+        if test ${samoyeds[$index]} -ne -1; then
+            if test ${samoyeds[$index]} -eq $requiredSamoyeds; then
+                ((++score))
+            else
+                continue
+            fi
+        fi
+        
+        if test ${pomeranians[$index]} -ne -1; then
+            if test ${pomeranians[$index]} -eq $requiredPomeranians; then
+                ((++score))
+            else
+                continue
+            fi
+        fi
+        
+        if test ${akitas[$index]} -ne -1; then
+            if test ${akitas[$index]} -eq $requiredAkitas; then
+                ((++score))
+            else
+                continue
+            fi
+        fi
+        
+        if test ${vizslas[$index]} -ne -1; then
+            if test ${vizslas[$index]} -eq $requiredVizslas; then
+                ((++score))
+            else
+                continue
+            fi
+        fi
+        
+        if test ${goldfish[$index]} -ne -1; then
+            if test ${goldfish[$index]} -eq $requiredGoldfish; then
+                ((++score))
+            else
+                continue
+            fi
+        fi
+        
+        if test ${trees[$index]} -ne -1; then
+            if test ${trees[$index]} -eq $requiredTrees; then
+                ((++score))
+            else
+                continue
+            fi
+        fi
+        
+        if test ${cars[$index]} -ne -1; then
+            if test ${cars[$index]} -eq $requiredCars; then
+                ((++score))
+            else
+                continue
+            fi
+        fi
+        
+        if test ${perfumes[$index]} -ne -1; then
+            if test ${perfumes[$index]} -eq $requiredPerfumes; then
+                ((++score))
+            else
+                continue
+            fi
+        fi
+
+        if test $score -gt $bestSueScore; then
+            bestSueScore=$score
+            bestSue=$index
+
+            echo "Sue $bestSue has a score of $bestSueScore"
+        fi
+    done
+
+    echo "The best matching Sue is Sue $bestSue with a score of $bestSueScore"
+}
+
+main "$@"

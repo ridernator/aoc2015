@@ -1,0 +1,64 @@
+#!/bin/bash
+
+main() {
+    local -i period=2503
+
+    # Set up points array
+    local -A points
+    while read line; do
+        points[$(echo $line | cut -d' ' -f1)]=0
+    done < input
+
+    # For each second
+    for ((index=1; index<=period; ++index)); do
+        local -i maxDist=0
+        local winner="Unknown"
+
+        # Read each line
+        while read line; do
+            local -i dist=0
+
+            # Read variables in
+            local    name=$(echo $line | cut -d' ' -f1)
+            local -i speed=$(echo $line | cut -d' ' -f4)
+            local -i flyPeriod=$(echo $line | cut -d' ' -f7)
+            local -i restPeriod=$(echo $line | cut -d' ' -f14)
+
+            # Add on fullblocks
+            ((dist += (index / (flyPeriod + restPeriod)) * flyPeriod * speed))
+
+            # Add on partial blocks
+            local -i leftOverPeriod=$((index % (flyPeriod + restPeriod)))
+            local -i partialPeriod=$flyPeriod
+            if test $leftOverPeriod -lt $partialPeriod; then
+                partialPeriod=$leftOverPeriod
+            fi
+
+            ((dist += partialPeriod * speed))
+
+            # Record the winner
+            if test $dist -gt $maxDist; then
+                maxDist=$dist
+                winner=$name
+            fi
+        done < input
+
+        # Add on points for the winner
+        ((++points[$winner]))
+        echo "$winner is in the lead after ${index}s"
+    done
+
+    # Calculate who the winner is and how many points he had
+    local winner="Unknown"
+    local -i maxPoints=0
+    for animal in ${!points[@]}; do
+        if test ${points[$animal]} -gt $maxPoints; then
+            maxPoints=${points[$animal]}
+            winner=$animal
+        fi
+    done
+
+    echo "Winning reindeer is $winner with $maxPoints points"
+}
+
+main "$@"

@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Calculate square root of a number and then floor it
+intSqRoot() {
+    echo "scale=0;sqrt($1)" | bc
+}
+
+main() {
+    local -ri INPUT=29000000
+    local -ri NUM_TO_FIND=$((INPUT / 10))
+
+    local -i house=4
+
+    # Loop though all house until we get to a house which gets more than NUM_TO_FIND presents
+    # NB This falls over for houses 1 2 and 3 but we know they won't be the answer
+    while true; do
+        local -i housePresents=0
+        local -i sqrtHouse=$(intSqRoot $house)
+
+        for ((index=1; index<=sqrtHouse; ++index)); do
+            if test $((house % index)) -eq 0; then
+                if test $index -ne $((house / index)); then
+                    ((housePresents += index + (house / index)))
+                    #echo "House $house is visited by elf $index who delivers $((10 * index)) presents and elf $((house / index)) who delivers $((10 * (house / index))) presents"
+                else
+                    ((housePresents += index))
+                    #echo "House $house is visited by elf $index who delivers $((10 * index)) presents"
+                fi
+            fi
+        done
+
+        # Found house
+        if test $housePresents -ge $NUM_TO_FIND; then
+            echo "House number $house gets at least $INPUT presents ($((housePresents * 10)))"
+
+            break
+        else
+            if test $((house % 1000)) -eq 0; then
+                echo "House number $house only gets $((housePresents * 10)) presents"
+            fi
+        fi
+
+        ((++house))
+    done
+}
+
+main "$@"
