@@ -36,7 +36,8 @@ main() {
             break
         else
             if test $((house % 1000)) -eq 0; then
-                echo "House number $house only gets $((housePresents * 11)) presents"
+                echo "House number $house only gets $((housePresents * 11)) presents ($((1000000 / ($(date +%s%N | cut -b1-13) - timer))) houses per second)"
+                timer=$(date +%s%N | cut -b1-13)
             fi
         fi
 
