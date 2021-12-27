@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Calculate square root of a number and then floor it
+intSqRoot() {
+    echo "scale=0;sqrt($1)" | bc
+}
+
+main() {
+    local -ri INPUT=29000000
+    local -ri NUM_TO_FIND=$((INPUT / 11))
+
+    local -i house=4
+
+    # Loop though all house until we get to a house which gets more than NUM_TO_FIND presents
+    # NB This falls over for houses 1 2 and 3 but we know they won't be the answer
+    while true; do
+        local -i housePresents=0
+        local -i sqrtHouse=$(intSqRoot $house)
+
+        for ((index=1; index<=sqrtHouse; ++index)); do
+            if test $((house % index)) -eq 0; then
+                if test $((house / index)) -le 50; then
+                    ((housePresents += index))
+                fi
+
+                if test $index -le 50; then
+                    ((housePresents += (house / index)))
+                fi
+            fi
+        done
+
+        # Found house
+        if test $housePresents -ge $NUM_TO_FIND; then
+            echo "House number $house gets at least $INPUT presents ($((housePresents * 11)))"
+
+            break
+        else
+            if test $((house % 1000)) -eq 0; then
+                echo "House number $house only gets $((housePresents * 11)) presents ($((1000000 / ($(date +%s%N | cut -b1-13) - timer))) houses per second)"
+                timer=$(date +%s%N | cut -b1-13)
+            fi
+        fi
+
+        ((++house))
+    done
+}
+
+main "$@"
