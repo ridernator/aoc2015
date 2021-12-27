@@ -6,12 +6,10 @@ intSqRoot() {
 }
 
 main() {
-    #local -ri INPUT=29000000
-    local -ri INPUT=1000000
+    local -ri INPUT=29000000
     local -ri NUM_TO_FIND=$((INPUT / 10))
 
     local -i house=4
-    #local -i house=132000
 
     # Loop though all house until we get to a house which gets more than NUM_TO_FIND presents
     # NB This falls over for houses 1 2 and 3 but we know they won't be the answer
