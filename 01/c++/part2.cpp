@@ -15,17 +15,24 @@ int main() {
 
     // Read each char in file
     char c;
+    int index = 0;
     while ((c = fgetc(fptr)) != EOF) {
         if (c == '(') {
             ++floor;
         } else if (c == ')') {
             --floor;
         }
+
+        ++index;
+
+        if (floor == -1) {
+            break;
+        }
     }
 
     fclose(fptr);
 
-    fprintf(stdout, "Ending floor is %i\n", floor);
+    fprintf(stdout, "Got to the basement at character %i\n", index);
 
     return 0;
 }
