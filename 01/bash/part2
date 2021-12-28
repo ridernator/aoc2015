@@ -1,6 +1,7 @@
 #!/bin/bash
 
 main() {
+    local -r INPUT="../data/input"
     local -i floor=0
 
     # Read each line
@@ -20,7 +21,7 @@ main() {
                 exit
             fi
         done
-    done < input
+    done < "$INPUT"
 }
 
 main "$@"
