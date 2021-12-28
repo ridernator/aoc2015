@@ -1,0 +1,226 @@
+#!/bin/bash
+
+main() {
+    local -r INPUT=input
+
+    # Load up spell data
+    local -ra SPELLS=( magicMissile \
+                       drain \
+                       shield \
+                       poison \
+                       recharge )
+
+    local -rA SPELL_COST=( ["magicMissile"]=53 \
+                           ["drain"]=73 \
+                           ["shield"]=113 \
+                           ["poison"]=173 \
+                           ["recharge"]=229 )
+    
+    local -rA SPELL_DAMAGE=( ["magicMissile"]=4 \
+                             ["drain"]=2 \
+                             ["poison"]=3 )
+
+    local -rA SPELL_DURATION=( ["shield"]=6 \
+                               ["poison"]=6 \
+                               ["recharge"]=5 )
+
+    local -ri MANA_RECHARGE=101
+    local -ri SHIELD_ARMOR=7
+    local -rA DRAIN_HEAL=2
+
+    # Read in boss data
+    local -ri BOSS_LIFE=$(grep Points $INPUT | cut -d' ' -f3)
+    local -ri BOSS_DAMAGE=$(grep Damage $INPUT | cut -d' ' -f2)
+
+    # Initial player data
+    local -ri PLAYER_LIFE=50
+    local -ri PLAYER_MANA=500
+
+    local -i minMana=9999999
+
+    local -a bossLife=( $BOSS_LIFE )
+
+    local -a life=( $PLAYER_LIFE )
+    local -a mana=( $PLAYER_MANA )
+    local -a shieldRemaining=( 0 )
+    local -a poisonRemaining=( 0 )
+    local -a rechargeRemaining=( 0 )
+    local -a spellIndex=( 0 )
+    local -a manaSpent=( 0 )
+    local -i turnIndex=0
+
+    while true; do
+        ###############################
+        # Player turn
+        ###############################
+        for ((index=0; index<=turnIndex; ++index)); do
+            echo -n "${SPELLS[${spellIndex[$index]}]:0:1}, "
+        done
+        echo
+
+        # Copy values to new turn
+        life[$((turnIndex + 1))]=${life[$turnIndex]}
+        mana[$((turnIndex + 1))]=${mana[$turnIndex]}
+        manaSpent[$((turnIndex + 1))]=${manaSpent[$turnIndex]}
+        shieldRemaining[$((turnIndex + 1))]=${shieldRemaining[$turnIndex]}
+        poisonRemaining[$((turnIndex + 1))]=${poisonRemaining[$turnIndex]}
+        rechargeRemaining[$((turnIndex + 1))]=${rechargeRemaining[$turnIndex]}
+        bossLife[$((turnIndex + 1))]=${bossLife[$turnIndex]}
+        spellIndex[$((turnIndex + 1))]=0
+
+        # Apply poison damage
+        if test ${poisonRemaining[$((turnIndex + 1))]} -ne 0; then
+            ((bossLife[$((turnIndex + 1))] -= ${SPELL_DAMAGE["poison"]}))
+        fi
+
+        # Apply mana recharge
+        if test ${rechargeRemaining[$((turnIndex + 1))]} -ne 0; then
+            ((mana[$((turnIndex + 1))] += MANA_RECHARGE))
+        fi
+
+        # Decrement effects
+        if test ${shieldRemaining[$((turnIndex + 1))]} -ne 0; then
+            ((--shieldRemaining[$((turnIndex + 1))]))
+        fi
+
+        if test ${poisonRemaining[$((turnIndex + 1))]} -ne 0; then
+            ((--poisonRemaining[$((turnIndex + 1))]))
+        fi
+
+        if test ${rechargeRemaining[$((turnIndex + 1))]} -ne 0; then
+            ((--rechargeRemaining[$((turnIndex + 1))]))
+        fi
+
+        local badSpell=0
+
+        # Apply spell effects and mana costs
+        if test ${SPELLS[${spellIndex[$turnIndex]}]} = "magicMissile"; then
+            ((bossLife[$((turnIndex + 1))] -= ${SPELL_DAMAGE["magicMissile"]}))
+            ((mana[$((turnIndex + 1))] -= ${SPELL_COST["magicMissile"]}))
+            ((manaSpent[$((turnIndex + 1))] += ${SPELL_COST["magicMissile"]}))
+        elif test ${SPELLS[${spellIndex[$turnIndex]}]} = "drain"; then
+            ((bossLife[$((turnIndex + 1))] -= ${SPELL_DAMAGE["drain"]}))
+            ((life[$((turnIndex + 1))] += DRAIN_HEAL))
+            ((mana[$((turnIndex + 1))] -= ${SPELL_COST["drain"]}))
+            ((manaSpent[$((turnIndex + 1))] += ${SPELL_COST["drain"]}))
+        elif test ${SPELLS[${spellIndex[$turnIndex]}]} = "shield"; then
+            if test ${shieldRemaining[$((turnIndex + 1))]} -gt 0; then
+                badSpell=1
+            else
+                shieldRemaining[$((turnIndex + 1))]=${SPELL_DURATION["shield"]}
+                ((mana[$((turnIndex + 1))] -= ${SPELL_COST["shield"]}))
+                ((manaSpent[$((turnIndex + 1))] += ${SPELL_COST["shield"]}))
+            fi
+        elif test ${SPELLS[${spellIndex[$turnIndex]}]} = "poison"; then
+            if test ${poisonRemaining[$((turnIndex + 1))]} -gt 0; then
+                badSpell=1
+            else                
+                poisonRemaining[$((turnIndex + 1))]=${SPELL_DURATION["poison"]}
+                ((mana[$((turnIndex + 1))] -= ${SPELL_COST["poison"]}))
+                ((manaSpent[$((turnIndex + 1))] += ${SPELL_COST["poison"]}))
+            fi
+        elif test ${SPELLS[${spellIndex[$turnIndex]}]} = "recharge"; then
+            if test ${rechargeRemaining[$((turnIndex + 1))]} -gt 0; then
+                badSpell=1
+            else                
+                rechargeRemaining[$((turnIndex + 1))]=${SPELL_DURATION["recharge"]}
+                ((mana[$((turnIndex + 1))] -= ${SPELL_COST["recharge"]}))
+                ((manaSpent[$((turnIndex + 1))] += ${SPELL_COST["recharge"]}))
+            fi
+        fi
+
+        # Try next iteration if mana spent is too high, or we have run out of mana or we tried to 
+        # use a spell we couldn't use because its effect had not run out
+        if test ${manaSpent[$((turnIndex + 1))]} -ge $minMana -o \
+                ${mana[$((turnIndex + 1))]} -lt 0 -o \
+                $badSpell -eq 1; then
+            # Calculate next iterations
+            while test $((++spellIndex[$turnIndex])) -eq ${#SPELLS[@]}; do
+                if test $((--turnIndex)) -eq -1; then
+                    break 2
+                fi
+            done
+
+            continue
+        fi
+
+        # If we killed the boss then see if we used less mana than previously
+        if test ${bossLife[$((turnIndex + 1))]} -le 0; then
+            if test ${manaSpent[$((turnIndex + 1))]} -lt $minMana; then
+                minMana=${manaSpent[$((turnIndex + 1))]}
+                echo -n "New minimum mana spend found ($minMana) : "
+
+                for ((index=0; index<=turnIndex; ++index)); do
+                    echo -n "${SPELLS[${spellIndex[$index]}]}, "
+                done
+                echo
+            fi
+        fi
+
+        ###############################
+        # Boss turn
+        ###############################
+
+        # Apply poison damage
+        if test ${poisonRemaining[$((turnIndex + 1))]} -ne 0; then
+            ((bossLife[$((turnIndex + 1))] -= ${SPELL_DAMAGE["poison"]}))
+        fi
+
+        # Apply mana recharge
+        if test ${rechargeRemaining[$((turnIndex + 1))]} -ne 0; then
+            ((mana[$((turnIndex + 1))] += MANA_RECHARGE))
+        fi
+
+        # Apply shield boost
+        if test ${shieldRemaining[$((turnIndex + 1))]} -ne 0; then
+            ((life[$((turnIndex + 1))] += SHIELD_ARMOR))
+        fi
+
+        # Decrement effects
+        if test ${shieldRemaining[$((turnIndex + 1))]} -ne 0; then
+            ((--shieldRemaining[$((turnIndex + 1))]))
+        fi
+
+        if test ${poisonRemaining[$((turnIndex + 1))]} -ne 0; then
+            ((--poisonRemaining[$((turnIndex + 1))]))
+        fi
+
+        if test ${rechargeRemaining[$((turnIndex + 1))]} -ne 0; then
+            ((--rechargeRemaining[$((turnIndex + 1))]))
+        fi
+
+        # If we killed the boss then see if we used less mana than previously
+        if test ${bossLife[$((turnIndex + 1))]} -le 0; then
+            if test ${manaSpent[$((turnIndex + 1))]} -lt $minMana; then
+                minMana=${manaSpent[$((turnIndex + 1))]}
+                echo -n "New minimum mana spend found ($minMana) : "
+
+                for ((index=0; index<=turnIndex; ++index)); do
+                    echo -n "${SPELLS[${spellIndex[$index]}]}, "
+                done
+                echo
+            fi
+        fi
+
+        # Apply boss hit
+        ((life[$((turnIndex + 1))] -= BOSS_DAMAGE))
+
+        # We dies so go to next step
+        if test ${life[$((turnIndex + 1))]} -le 0; then
+            # Calculate next iterations
+            while test $((++spellIndex[$turnIndex])) -eq ${#SPELLS[@]}; do
+                if test $((--turnIndex)) -eq -1; then
+                    break 2
+                fi
+            done
+
+            continue
+        fi
+
+        ((++turnIndex))
+    done
+
+    echo "Minimum mana spend : $minMana"
+}
+
+main "$@"
