@@ -1,5 +1,7 @@
 #!/bin/bash
 
+declare -r INPUT="../data/input"
+
 main() {
     local -i totalRibbonLength=0
 
@@ -41,9 +43,9 @@ main() {
 
         # Add ribbonLength to total ribbonLength
         ((totalRibbonLength += ribbonLength))
-    done < input
+    done < "$INPUT"
 
-    echo "Total ribbon lrngth required is $totalRibbonLength"
+    echo "Total ribbon length required is $totalRibbonLength"
 }
 
 main "$@"

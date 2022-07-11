@@ -1,5 +1,7 @@
 #!/bin/bash
 
+declare -r INPUT="../data/input"
+
 main() {
     local -i totalArea=0
 
@@ -38,7 +40,7 @@ main() {
 
         # Add area to total area
         ((totalArea += area))
-    done < input
+    done < "$INPUT"
 
     echo "Total area required is $totalArea"
 }
