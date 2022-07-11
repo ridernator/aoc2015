@@ -1,5 +1,7 @@
 #!/bin/bash
 
+declare -r INPUT="../data/input"
+
 main() {
     # Read each line
     while read directions; do
@@ -60,7 +62,7 @@ main() {
         done
 
         echo "Total houses visited = ${#housePositions[@]}"
-    done < input
+    done < "$INPUT"
 }
 
 main "$@"
