@@ -1,5 +1,7 @@
 #!/bin/bash
 
+declare -r INPUT="../data/input"
+
 main() {
     local -i niceCount=0
 
@@ -58,7 +60,7 @@ main() {
 
         echo "$word is nice"
         ((++niceCount))
-    done < input
+    done < "$INPUT"
 
     echo "$niceCount words are nice"
 }
