@@ -1,5 +1,7 @@
 #!/bin/bash
 
+declare -r INPUT="../data/input"
+
 declare -ri DIMENSION=1000
 
 main() {
@@ -53,7 +55,7 @@ main() {
                 done
             done
         fi
-    done < input
+    done < "$INPUT"
 
     local -i lightCount=0
 
