@@ -27,8 +27,13 @@ int main() {
     std::string line;
     std::map<std::pair<int64_t, int64_t>, bool> visitedHouses;
     char direction;
-    int64_t x = 0;
-    int64_t y = 0;
+
+    // Array of positions, one for santa, one for robo-santa
+    int64_t x[2] = {0, 0};
+    int64_t y[2] = {0, 0};
+
+    // Index to swap between santa and robo-santa
+    int64_t index = 0;
 
     // Flag house at position x, y as receiving a present
     visitedHouses[std::make_pair(0, 0)] = true;
@@ -38,32 +43,35 @@ int main() {
         // Calculate new position
         switch (direction) {
             case '>': {
-                ++x;
+                ++x[index];
 
                 break;
             }
 
             case '<': {
-                --x;
+                --x[index];
 
                 break;
             }
 
             case '^': {
-                ++y;
+                ++y[index];
 
                 break;
             }
 
             case 'v': {
-                --y;
+                --y[index];
 
                 break;
             }
         }
 
         // Flag house at position x, y as receiving a present
-        visitedHouses[std::make_pair(x, y)] = true;
+        visitedHouses[std::make_pair(x[index], y[index])] = true;
+
+        // Switch between santa and robo-santa
+        index = (index + 1) % 2;
     }
 
     std::cout << "Number of houses which receive at least one present : " << visitedHouses.size() << std::endl;
