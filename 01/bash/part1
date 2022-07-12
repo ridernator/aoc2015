@@ -1,7 +1,8 @@
 #!/bin/bash
 
+declare -r INPUT="../data/input"
+
 main() {
-    local -r INPUT="../data/input"
     local -i floor=0
 
     # Read each line
