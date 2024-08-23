@@ -11,7 +11,10 @@ for line in inputFile.readlines():
     height = int(dimensions[2])
 
     area = 2 * (width * height + width * length + height * length)
-    slack = min(width * height, width * length, height * length)
+
+    slack = min(width * height,
+                width * length,
+                height * length)
 
     totalArea += area + slack
 
