@@ -1,7 +1,7 @@
 #!/bin/bash
 
 main() {
-    local -r INPUT=input
+    local -r INPUT="../data/input"
     local -A signals
     local -a commands
 
@@ -9,6 +9,10 @@ main() {
     local -i commandIndex=0
     while read command; do
         commands[$((commandIndex++))]="$command"
+
+        if test "$command" = "19138 -> b"; then
+            commands[$((commandIndex - 1))]="16076 -> b"
+        fi
     done < $INPUT
 
     # Read each command
@@ -39,7 +43,7 @@ main() {
                     local signalA=$(echo $command | cut -d' ' -f1)
                     local signalB=$(echo $command | cut -d' ' -f3)
                     local target=$(echo $command | cut -d' ' -f5)
-                    
+
                     if [[ $signalA =~ .*[a-z].* ]]; then
                         signalA=${signals[$signalA]}
                     fi
@@ -56,7 +60,7 @@ main() {
                 elif [[ $command =~ .*NOT.* ]]; then
                     local signalA=$(echo $command | cut -d' ' -f2)
                     local target=$(echo $command | cut -d' ' -f4)
-                    
+
                     if [[ $signalA =~ .*[a-z].* ]]; then
                         signalA=${signals[$signalA]}
                     fi
@@ -70,7 +74,7 @@ main() {
                     local signalA=$(echo $command | cut -d' ' -f1)
                     local signalB=$(echo $command | cut -d' ' -f3)
                     local target=$(echo $command | cut -d' ' -f5)
-                    
+
                     if [[ $signalA =~ .*[a-z].* ]]; then
                         signalA=${signals[$signalA]}
                     fi
@@ -88,7 +92,7 @@ main() {
                     local signalA=$(echo $command | cut -d' ' -f1)
                     local signalB=$(echo $command | cut -d' ' -f3)
                     local target=$(echo $command | cut -d' ' -f5)
-                    
+
                     if [[ $signalA =~ .*[a-z].* ]]; then
                         signalA=${signals[$signalA]}
                     fi
